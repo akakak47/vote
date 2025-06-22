@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>管理后台</h2>
+    <a href="{{ url_for('admin.create_poll') }}" class="btn btn-primary">创建新投票</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>标题</th>
+                <th>创建时间</th>
+                <th>截止日期</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for poll in polls %}
+            <tr>
+                <td>{{ poll.title }}</td>
+                <td>{{ poll.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    {% if poll.end_date %}
+                    {{ poll.end_date.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                    无截止日期
+                    {% endif %}
+                </td>
+                <td>
+                    {% if poll.is_active %}
+                    <span class="badge bg-success">进行中</span>
+                    {% else %}
+                    <span class="badge bg-secondary">已结束</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('admin.poll_results', poll_id=poll.id) }}" class="btn btn-sm btn-info">查看结果</a>
+                    <a href="{{ url_for('admin.toggle_poll', poll_id=poll.id) }}" class="btn btn-sm {% if poll.is_active %}btn-warning{% else %}btn-success{% endif %}">
+                        {% if poll.is_active %}结束投票{% else %}重新开启{% endif %}
+                    </a>
+                    <button type="button" class="btn btn-sm btn-danger" 
+                            onclick="confirmDelete({{ poll.id }}, '{{ poll.title }}')">
+                        删除
+                    </button>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center">暂无投票</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- 删除确认对话框 -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">确认删除</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>您确定要删除投票 "<span id="pollTitle"></span>" 吗？</p>
+                <p class="text-danger">此操作不可撤销，所有相关的投票记录也将被删除。</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">确认删除</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(pollId, pollTitle) {
+    document.getElementById('pollTitle').textContent = pollTitle;
+    document.getElementById('confirmDeleteBtn').href = "{{ url_for('admin.delete_poll', poll_id=0) }}".replace('0', pollId);
+    var modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    modal.show();
+}
+</script>
+{% endblock %} 

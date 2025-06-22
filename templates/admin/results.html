@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">{{ poll.title }} - 投票结果</h3>
+    </div>
+    <div class="card-body">
+        {% if poll.description %}
+        <p class="card-text">{{ poll.description }}</p>
+        {% endif %}
+
+        <div class="alert alert-info">
+            总投票数：{{ total_votes }}
+        </div>
+
+        <div class="results-container">
+            {% for option, count in results.items() %}
+            <div class="mb-3">
+                <label class="form-label">{{ option }}</label>
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ (count / total_votes * 100) if total_votes > 0 else 0 }}%"
+                         aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ total_votes }}">
+                        {{ count }} 票 ({{ "%.1f"|format(count / total_votes * 100) if total_votes > 0 else 0 }}%)
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4">
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-secondary">返回管理后台</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

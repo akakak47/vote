@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="mb-0">{{ poll.title }}</h3>
+    </div>
+    <div class="card-body">
+        {% if poll.description %}
+        <p class="card-text">{{ poll.description }}</p>
+        {% endif %}
+        
+        {% if poll.end_date %}
+        <p class="text-muted">截止日期：{{ poll.end_date.strftime('%Y-%m-%d %H:%M') }}</p>
+        {% endif %}
+
+        {% if not poll.is_active %}
+        <div class="alert alert-warning">
+            此投票已结束。
+        </div>
+        {% elif user_vote %}
+        <div class="alert alert-info">
+            您已投票，选择了：{{ user_vote.choice }}
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('main.submit_vote', poll_id=poll.id) }}">
+            <div class="mb-3">
+                {% for option in poll.options %}
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="choice" id="option{{ loop.index }}" value="{{ option }}" required>
+                    <label class="form-check-label" for="option{{ loop.index }}">
+                        {{ option }}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">提交投票</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
