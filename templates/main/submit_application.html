@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>提交博士后申请</h2>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="applicant_name" class="form-label">申请人姓名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="applicant_name" name="applicant_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="applicant_email" class="form-label">邮箱 <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="applicant_email" name="applicant_email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">电话</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    <div class="mb-3">
+                        <label for="education_background" class="form-label">教育背景</label>
+                        <textarea class="form-control" id="education_background" name="education_background" rows="4" placeholder="请详细描述您的教育背景，包括学位、专业、毕业院校等"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="research_proposal" class="form-label">研究计划 <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="research_proposal" name="research_proposal" rows="6" required placeholder="请详细描述您的研究计划，包括研究目标、方法、预期成果等"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="mentor_recommendation" class="form-label">导师推荐</label>
+                        <textarea class="form-control" id="mentor_recommendation" name="mentor_recommendation" rows="4" placeholder="导师推荐信或推荐意见"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">返回</a>
+                        <button type="submit" class="btn btn-primary">提交申请</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

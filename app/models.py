@@ -34,21 +34,26 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     is_admin = db.Column(db.Boolean, default=False)
-    votes = db.relationship('Vote', backref='voter', lazy=True)
+    applications = db.relationship('PostdocApplication', backref='submitter', lazy=True)
+    reviews = db.relationship('Review', backref='reviewer', lazy=True)
 
-class Poll(db.Model):
+class PostdocApplication(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    options = db.Column(db.JSON, nullable=False)  # 存储投票选项列表
+    applicant_name = db.Column(db.String(100), nullable=False)
+    applicant_email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(20))
+    education_background = db.Column(db.Text)
+    research_proposal = db.Column(db.Text, nullable=False)
+    mentor_recommendation = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
     created_at = db.Column(TimezoneAwareDateTime, default=get_current_time)
-    end_date = db.Column(TimezoneAwareDateTime)
-    is_active = db.Column(db.Boolean, default=True)
-    votes = db.relationship('Vote', backref='poll', lazy=True)
+    submitted_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    reviews = db.relationship('Review', backref='application', lazy=True)
 
-class Vote(db.Model):
+class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    poll_id = db.Column(db.Integer, db.ForeignKey('poll.id'), nullable=False)
-    choice = db.Column(db.String(200), nullable=False)
-    voted_at = db.Column(TimezoneAwareDateTime, default=get_current_time) 
+    reviewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    application_id = db.Column(db.Integer, db.ForeignKey('postdoc_application.id'), nullable=False)
+    decision = db.Column(db.String(20), nullable=False)  # approved, rejected
+    comments = db.Column(db.Text)
+    reviewed_at = db.Column(TimezoneAwareDateTime, default=get_current_time) 
