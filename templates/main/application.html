@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>申请详情</h2>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>{{ application.applicant_name }}的博士后申请</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>申请人姓名：</strong></div>
+                    <div class="col-sm-9">{{ application.applicant_name }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>邮箱：</strong></div>
+                    <div class="col-sm-9">{{ application.applicant_email }}</div>
+                </div>
+                {% if application.phone %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>电话：</strong></div>
+                    <div class="col-sm-9">{{ application.phone }}</div>
+                </div>
+                {% endif %}
+                {% if application.education_background %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>教育背景：</strong></div>
+                    <div class="col-sm-9">{{ application.education_background }}</div>
+                </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>研究计划：</strong></div>
+                    <div class="col-sm-9">{{ application.research_proposal }}</div>
+                </div>
+                {% if application.mentor_recommendation %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>导师推荐：</strong></div>
+                    <div class="col-sm-9">{{ application.mentor_recommendation }}</div>
+                </div>
+                {% endif %}
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>申请状态：</strong></div>
+                    <div class="col-sm-9">
+                        <span class="badge 
+                            {% if application.status == 'pending' %}bg-warning
+                            {% elif application.status == 'approved' %}bg-success
+                            {% else %}bg-danger{% endif %}">
+                            {% if application.status == 'pending' %}待审批
+                            {% elif application.status == 'approved' %}已批准
+                            {% else %}已拒绝{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-3"><strong>提交时间：</strong></div>
+                    <div class="col-sm-9">{{ application.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        {% if current_user.is_authenticated and current_user.is_admin and not user_review and application.status == 'pending' %}
+        <div class="card">
+            <div class="card-header">
+                <h6>审批操作</h6>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.submit_review', app_id=application.id) }}">
+                    <div class="mb-3">
+                        <label for="decision" class="form-label">审批结果</label>
+                        <select class="form-select" id="decision" name="decision" required>
+                            <option value="">请选择</option>
+                            <option value="approved">批准</option>
+                            <option value="rejected">拒绝</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comments" class="form-label">审批意见</label>
+                        <textarea class="form-control" id="comments" name="comments" rows="4"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">提交审批</button>
+                </form>
+            </div>
+        </div>
+        {% elif user_review %}
+        <div class="card">
+            <div class="card-header">
+                <h6>您的审批</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>审批结果：</strong>
+                    <span class="badge {% if user_review.decision == 'approved' %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if user_review.decision == 'approved' %}已批准{% else %}已拒绝{% endif %}
+                    </span>
+                </p>
+                {% if user_review.comments %}
+                <p><strong>审批意见：</strong>{{ user_review.comments }}</p>
+                {% endif %}
+                <p><strong>审批时间：</strong>{{ user_review.reviewed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

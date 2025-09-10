@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from .models import Poll, Vote
+from .models import PostdocApplication, Review
 from . import db
 from datetime import datetime
 import pytz
@@ -32,102 +32,55 @@ def admin_required(f):
 @login_required
 @admin_required
 def admin_dashboard():
-    polls = Poll.query.order_by(Poll.created_at.desc()).all()
+    applications = PostdocApplication.query.order_by(PostdocApplication.created_at.desc()).all()
     # 确保所有时间都有时区信息
-    for poll in polls:
-        poll.created_at = localize_time(poll.created_at)
-        poll.end_date = localize_time(poll.end_date)
-    return render_template('admin/dashboard.html', polls=polls)
+    for app in applications:
+        app.created_at = localize_time(app.created_at)
+    return render_template('admin/dashboard.html', applications=applications)
 
-@admin.route('/admin/poll/new', methods=['GET', 'POST'])
+@admin.route('/admin/application/<int:app_id>')
 @login_required
 @admin_required
-def create_poll():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description')
-        options = request.form.getlist('options')
-        end_date = request.form.get('end_date')
-
-        if not title or not options:
-            flash('请填写标题和至少一个选项。')
-            return redirect(url_for('admin.create_poll'))
-
-        # 过滤空选项
-        options = [opt.strip() for opt in options if opt.strip()]
-        
-        if end_date:
-            # 将字符串转换为datetime对象并设置为中国时区
-            naive_end_date = datetime.strptime(end_date, '%Y-%m-%dT%H:%M')
-            china_tz = pytz.timezone('Asia/Shanghai')
-            end_date = china_tz.localize(naive_end_date)
-        
-        poll = Poll(
-            title=title,
-            description=description,
-            options=options,
-            end_date=end_date,
-            created_at=get_current_time()
-        )
-        
-        db.session.add(poll)
-        db.session.commit()
-        
-        flash('投票创建成功！')
-        return redirect(url_for('admin.admin_dashboard'))
-        
-    return render_template('admin/create_poll.html')
-
-@admin.route('/admin/poll/<int:poll_id>')
-@login_required
-@admin_required
-def poll_results(poll_id):
-    poll = Poll.query.get_or_404(poll_id)
+def application_details(app_id):
+    application = PostdocApplication.query.get_or_404(app_id)
     # 确保时间有时区信息
-    poll.created_at = localize_time(poll.created_at)
-    poll.end_date = localize_time(poll.end_date)
+    application.created_at = localize_time(application.created_at)
     
-    votes = Vote.query.filter_by(poll_id=poll_id).all()
-    # 确保投票时间有时区信息
-    for vote in votes:
-        vote.voted_at = localize_time(vote.voted_at)
+    reviews = Review.query.filter_by(application_id=app_id).all()
+    # 确保审批时间有时区信息
+    for review in reviews:
+        review.reviewed_at = localize_time(review.reviewed_at)
     
-    # 统计结果
-    results = {}
-    for option in poll.options:
-        results[option] = len([v for v in votes if v.choice == option])
-        
-    total_votes = len(votes)
-    
-    return render_template('admin/results.html', 
-                         poll=poll, 
-                         results=results, 
-                         total_votes=total_votes)
+    return render_template('admin/application_details.html', 
+                         application=application, 
+                         reviews=reviews)
 
-@admin.route('/admin/poll/<int:poll_id>/toggle')
+@admin.route('/admin/application/<int:app_id>/status', methods=['POST'])
 @login_required
 @admin_required
-def toggle_poll(poll_id):
-    poll = Poll.query.get_or_404(poll_id)
-    poll.is_active = not poll.is_active
-    db.session.commit()
+def update_application_status(app_id):
+    application = PostdocApplication.query.get_or_404(app_id)
+    new_status = request.form.get('status')
     
-    status = '开启' if poll.is_active else '关闭'
-    flash(f'投票已{status}。')
-    return redirect(url_for('admin.admin_dashboard'))
+    if new_status in ['pending', 'approved', 'rejected']:
+        application.status = new_status
+        db.session.commit()
+        flash(f'申请状态已更新为{new_status}。')
+    
+    return redirect(url_for('admin.application_details', app_id=app_id))
 
-@admin.route('/admin/poll/<int:poll_id>/delete')
+@admin.route('/admin/application/<int:app_id>/delete')
 @login_required
 @admin_required
-def delete_poll(poll_id):
-    poll = Poll.query.get_or_404(poll_id)
+def delete_application(app_id):
+    application = PostdocApplication.query.get_or_404(app_id)
     
-    # 首先删除所有相关的投票记录
-    Vote.query.filter_by(poll_id=poll_id).delete()
+    # 首先删除所有相关的审批记录
+    Review.query.filter_by(application_id=app_id).delete()
     
-    # 然后删除投票本身
-    db.session.delete(poll)
+    # 然后删除申请本身
+    db.session.delete(application)
     db.session.commit()
     
-    flash('投票已删除。')
+    flash('申请已删除。')
     return redirect(url_for('admin.admin_dashboard')) 

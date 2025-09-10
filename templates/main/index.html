@@ -1,26 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>当前投票</h2>
+<h2>博士后进站申请</h2>
 <div class="row">
-    {% for poll in polls %}
+    {% for application in applications %}
     <div class="col-md-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">{{ poll.title }}</h5>
-                {% if poll.description %}
-                <p class="card-text">{{ poll.description }}</p>
-                {% endif %}
-                {% if poll.end_date %}
-                <p class="card-text"><small class="text-muted">截止日期：{{ poll.end_date.strftime('%Y-%m-%d %H:%M') }}</small></p>
-                {% endif %}
-                <a href="{{ url_for('main.view_poll', poll_id=poll.id) }}" class="btn btn-primary">参与投票</a>
+                <h5 class="card-title">{{ application.applicant_name }}</h5>
+                <p class="card-text"><strong>邮箱：</strong>{{ application.applicant_email }}</p>
+                <p class="card-text"><strong>状态：</strong>
+                    <span class="badge 
+                        {% if application.status == 'pending' %}bg-warning
+                        {% elif application.status == 'approved' %}bg-success
+                        {% else %}bg-danger{% endif %}">
+                        {% if application.status == 'pending' %}待审批
+                        {% elif application.status == 'approved' %}已批准
+                        {% else %}已拒绝{% endif %}
+                    </span>
+                </p>
+                <p class="card-text"><small class="text-muted">提交时间：{{ application.created_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                <a href="{{ url_for('main.view_application', app_id=application.id) }}" class="btn btn-primary">查看详情</a>
             </div>
         </div>
     </div>
     {% else %}
     <div class="col-12">
-        <p>目前没有进行中的投票。</p>
+        <p>目前没有申请记录。</p>
+        <a href="{{ url_for('main.submit_application') }}" class="btn btn-primary">提交博士后申请</a>
     </div>
     {% endfor %}
 </div>
